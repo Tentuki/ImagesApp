@@ -47,8 +47,6 @@ public class Network {
             } else {
                 return null;
             }
-        }catch (UnknownHostException e) {
-            return null;
         } finally {
             urlConnection.disconnect();
         }

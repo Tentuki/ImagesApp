@@ -9,10 +9,9 @@
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/image1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_margin="2dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/coffee_example"
         app:shapeAppearanceOverlay="@style/ImageView.Corner"
         tools:ignore="MissingConstraints" />
 

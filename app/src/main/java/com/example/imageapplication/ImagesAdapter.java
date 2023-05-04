@@ -1,7 +1,11 @@
 package com.example.imageapplication;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +18,7 @@ import java.util.ArrayList;
 
 public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImagesViewHolder> {
 
-    private  ArrayList<Bitmap> arrayList = new ArrayList<>();
+    private ArrayList<Bitmap> arrayList = new ArrayList<>();
 
     public void setImagesArray(ArrayList<Bitmap> array) {
         arrayList = array;
@@ -30,7 +34,22 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImagesView
 
     @Override
     public void onBindViewHolder(@NonNull ImagesViewHolder holder, int position) {
-        holder.bind(arrayList.get(position));
+        Bitmap bmp = arrayList.get(position);
+        holder.bind(bmp);
+        holder.image1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Context context = view.getContext();
+                Intent childIntent = new Intent(context, ChildActivity.class);
+                view.buildDrawingCache();
+                Bitmap image= view.getDrawingCache();
+
+                Bundle extras = new Bundle();
+                extras.putParcelable("imageBitmap", image);
+                childIntent.putExtras(extras);
+                context.startActivity(childIntent);
+            }
+        });
     }
 
     @Override
@@ -38,9 +57,9 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImagesView
         return arrayList.size();
     }
 
-    class ImagesViewHolder extends RecyclerView.ViewHolder {
+    static class ImagesViewHolder extends RecyclerView.ViewHolder {
 
-        private ImageView image1;
+        private final ImageView image1;
 
         public ImagesViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -48,8 +67,8 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImagesView
             image1 = itemView.findViewById(R.id.image1);
         }
 
-        void bind(Bitmap bm1) {
-            image1.setImageBitmap(bm1);
+        void bind(Bitmap bm) {
+            image1.setImageBitmap(bm);
         }
     }
 }

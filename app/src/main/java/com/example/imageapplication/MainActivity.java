@@ -19,9 +19,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,7 +35,9 @@ public class MainActivity extends AppCompatActivity {
     private ImagesAdapter imagesAdapter;
     private ProgressBar progressBar;
     private TextView errorMessage;
+    private String textException = "";
 
+    @SuppressLint("StaticFieldLeak")
     class QueryTask extends AsyncTask<URL, Void, ArrayList<Bitmap>> {
 
         @Override
@@ -40,31 +45,49 @@ public class MainActivity extends AppCompatActivity {
             ArrayList<Bitmap> bmArray = new ArrayList<>();
             try {
                 String response = Network.getResponseFromUrl(urls[0]);
-                assert response != null;
-                JSONObject jsonResponse = new JSONObject(response);
-                JSONArray array = jsonResponse.getJSONArray("images_results");
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject info = array.getJSONObject(i);
-                    String image = info.getString("thumbnail");
-                    Bitmap bitmap = Network.downloadImage(image);
-                    bmArray.add(bitmap);
+                if (response != null) {
+                    JSONObject jsonResponse = new JSONObject(response);
+                    JSONArray array = jsonResponse.getJSONArray("images_results");
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject info = array.getJSONObject(i);
+                        String image = info.getString("thumbnail");
+                        Bitmap bitmap = Network.downloadImage(image);
+                        bmArray.add(bitmap);
+                    }
+                } else {
+                    textException = "Не введён запрос";
+                    return bmArray;
                 }
-            } catch (Exception e) {
+            } catch (UnknownHostException e) {
+                textException = "Отсутствует подключение к интернету";
+                return bmArray;
+            } catch (JSONException e) {
+                textException = "Введён некорректный запрос";
+                return bmArray;
+            } catch (IOException e) {
+                textException = "Не введён запрос";
                 return bmArray;
             }
             return bmArray;
         }
 
         protected void onPostExecute(ArrayList<Bitmap> resultArray) {
-            if (resultArray.size() != 0) {
+            if (resultArray.size() == 0) {
+                if (textException.equals("Не введён запрос")) {
+                    errorMessage.setText("Произошла ошибка, введите запрос");
+                } else if (textException.equals("Отсутствует подключение к интернету")) {
+                    errorMessage.setText("Произошла ошибка, попробуйте позже");
+                } else if (textException.equals("Введён некорректный запрос")) {
+                    errorMessage.setText("Произошла ошибка, попробуйте ввести другой запрос");
+                }
+                errorMessage.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.INVISIBLE);
+            } else {
                 imagesAdapter = new ImagesAdapter();
                 recyclerView.setAdapter(imagesAdapter);
                 imagesAdapter.setImagesArray(resultArray);
                 progressBar.setVisibility(View.INVISIBLE);
                 recyclerView.setVisibility(View.VISIBLE);
-            } else {
-                errorMessage.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.INVISIBLE);
             }
         }
 
@@ -95,6 +118,13 @@ public class MainActivity extends AppCompatActivity {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onClick(View view) {
+                try {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                } catch (Exception e) {
+                    errorMessage.setText("Произошла ошибка, введите запрос");
+                    errorMessage.setVisibility(View.VISIBLE);
+                }
                 performSearch();
             }
         });
