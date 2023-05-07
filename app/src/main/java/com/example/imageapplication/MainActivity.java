@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -23,6 +24,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -36,12 +39,14 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView errorMessage;
     private String textException = "";
+    private ArrayList<String> arrayStringList = new ArrayList<>();
 
     @SuppressLint("StaticFieldLeak")
     class QueryTask extends AsyncTask<URL, Void, ArrayList<Bitmap>> {
 
         @Override
         protected ArrayList<Bitmap> doInBackground(URL... urls) {
+            arrayStringList.clear();
             ArrayList<Bitmap> bmArray = new ArrayList<>();
             try {
                 String response = Network.getResponseFromUrl(urls[0]);
@@ -51,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject info = array.getJSONObject(i);
                         String image = info.getString("thumbnail");
+                        arrayStringList.add(image);
                         Bitmap bitmap = Network.downloadImage(image);
                         bmArray.add(bitmap);
                     }
@@ -85,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 imagesAdapter = new ImagesAdapter();
                 recyclerView.setAdapter(imagesAdapter);
-                imagesAdapter.setImagesArray(resultArray);
+                imagesAdapter.setImagesArray(resultArray, arrayStringList);
                 progressBar.setVisibility(View.INVISIBLE);
                 recyclerView.setVisibility(View.VISIBLE);
             }
