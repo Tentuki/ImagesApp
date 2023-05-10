@@ -6,8 +6,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -24,8 +22,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -39,15 +35,16 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView errorMessage;
     private String textException = "";
-    private ArrayList<String> arrayStringList = new ArrayList<>();
+    private Button next;
+    private Button previous;
+    public int count = 0;
 
     @SuppressLint("StaticFieldLeak")
-    class QueryTask extends AsyncTask<URL, Void, ArrayList<Bitmap>> {
+    class QueryTask extends AsyncTask<URL, Void, ArrayList<String>> {
 
         @Override
-        protected ArrayList<Bitmap> doInBackground(URL... urls) {
-            arrayStringList.clear();
-            ArrayList<Bitmap> bmArray = new ArrayList<>();
+        protected ArrayList<String> doInBackground(URL... urls) {
+            ArrayList<String> arrayStringList = new ArrayList<>();
             try {
                 String response = Network.getResponseFromUrl(urls[0]);
                 if (response != null) {
@@ -57,27 +54,25 @@ public class MainActivity extends AppCompatActivity {
                         JSONObject info = array.getJSONObject(i);
                         String image = info.getString("thumbnail");
                         arrayStringList.add(image);
-                        Bitmap bitmap = Network.downloadImage(image);
-                        bmArray.add(bitmap);
                     }
                 } else {
                     textException = "Не введён запрос";
-                    return bmArray;
+                    return arrayStringList;
                 }
             } catch (UnknownHostException e) {
                 textException = "Отсутствует подключение к интернету";
-                return bmArray;
+                return arrayStringList;
             } catch (JSONException e) {
                 textException = "Введён некорректный запрос";
-                return bmArray;
+                return arrayStringList;
             } catch (IOException e) {
                 textException = "Не введён запрос";
-                return bmArray;
+                return arrayStringList;
             }
-            return bmArray;
+            return arrayStringList;
         }
 
-        protected void onPostExecute(ArrayList<Bitmap> resultArray) {
+        protected void onPostExecute(ArrayList<String> resultArray) {
             if (resultArray.size() == 0) {
                 if (textException.equals("Не введён запрос")) {
                     errorMessage.setText("Произошла ошибка, введите запрос");
@@ -87,14 +82,13 @@ public class MainActivity extends AppCompatActivity {
                     errorMessage.setText("Произошла ошибка, попробуйте ввести другой запрос");
                 }
                 errorMessage.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.INVISIBLE);
             } else {
                 imagesAdapter = new ImagesAdapter();
                 recyclerView.setAdapter(imagesAdapter);
-                imagesAdapter.setImagesArray(resultArray, arrayStringList);
-                progressBar.setVisibility(View.INVISIBLE);
+                imagesAdapter.setImagesArray(resultArray);
                 recyclerView.setVisibility(View.VISIBLE);
             }
+            progressBar.setVisibility(View.INVISIBLE);
         }
 
         @Override
@@ -114,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view);
         progressBar = findViewById(R.id.progress_bar);
         errorMessage = findViewById(R.id.error_message);
+        next = findViewById(R.id.button_next);
+        previous = findViewById(R.id.button_previous);
 
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 3);
         recyclerView.setLayoutManager(gridLayoutManager);
@@ -146,11 +142,40 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+        next.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recyclerView.setVisibility(View.INVISIBLE);
+                count++;
+                if (count == 49) {
+                    next.setVisibility(View.INVISIBLE);
+                }
+                URL generatedURL = Network.generateNewURL(count);
+                previous.setVisibility(View.VISIBLE);
+                new QueryTask().execute(generatedURL);
+            }
+        });
+        previous.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recyclerView.setVisibility(View.INVISIBLE);
+                count--;
+                if (count == 0) {
+                    previous.setVisibility(View.INVISIBLE);
+                }
+                next.setVisibility(View.VISIBLE);
+                URL generatedURL = Network.generateNewURL(count);
+                new QueryTask().execute(generatedURL);
+            }
+        });
     }
 
     public void performSearch() {
+        count = 0;
         recyclerView.setVisibility(View.INVISIBLE);
         URL generatedURL = Network.generateURL(textSearch.getText().toString());
+        previous.setVisibility(View.INVISIBLE);
+        next.setVisibility(View.VISIBLE);
         new QueryTask().execute(generatedURL);
     }
 }

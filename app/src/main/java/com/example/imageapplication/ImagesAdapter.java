@@ -1,15 +1,8 @@
 package com.example.imageapplication;
 
-import static android.provider.LiveFolders.INTENT;
-import static androidx.core.content.ContextCompat.startActivity;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Bundle;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,19 +11,16 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.ByteArrayOutputStream;
-import java.io.Serializable;
-import java.lang.reflect.Array;
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 
 public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImagesViewHolder> {
 
-    private ArrayList<Bitmap> arrayList = new ArrayList<>();
-    private ArrayList<String> arr = new ArrayList<>();
+    private ArrayList<String> arrayUriList = new ArrayList<>();
 
-    public void setImagesArray(ArrayList<Bitmap> array, ArrayList<String> arr) {
-        arrayList = array;
-        this.arr = arr;
+    public void setImagesArray(ArrayList<String> arr) {
+        arrayUriList = arr;
     }
 
     @NonNull
@@ -43,14 +33,13 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImagesView
 
     @Override
     public void onBindViewHolder(@NonNull ImagesViewHolder holder, @SuppressLint("RecyclerView") int position) {
-        Bitmap bmp = arrayList.get(position);
-        holder.bind(bmp);
-        holder.image1.setOnClickListener(new View.OnClickListener() {
+        Picasso.get().load(arrayUriList.get(position)).into(holder.image);
+        holder.image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Context context = view.getContext();
                 Intent Intent = new Intent(context, ChildActivity.class);
-                String uri = arr.get(position);
+                String uri = arrayUriList.get(position);
                 Intent.putExtra(android.content.Intent.EXTRA_TEXT, uri);
                 context.startActivity(Intent);
             }
@@ -59,21 +48,17 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImagesView
 
     @Override
     public int getItemCount() {
-        return arrayList.size();
+        return arrayUriList.size();
     }
 
     static class ImagesViewHolder extends RecyclerView.ViewHolder {
 
-        private final ImageView image1;
+        private final ImageView image;
 
         public ImagesViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            image1 = itemView.findViewById(R.id.image1);
-        }
-
-        void bind(Bitmap bm) {
-            image1.setImageBitmap(bm);
+            image = itemView.findViewById(R.id.image1);
         }
     }
 }
