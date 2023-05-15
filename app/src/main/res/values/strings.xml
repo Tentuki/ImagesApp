@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ImageApplication</string>
     <string name="enter_request">Введите запрос</string>
-    <string name="search">Search</string>
+    <string name="search">Поиск</string>
     <string name="error_message">Произошла ошибка, попробуйте позже</string>
     <string name="left"><![CDATA[<<]]></string>
     <string name="right"><![CDATA[>>]]></string>
